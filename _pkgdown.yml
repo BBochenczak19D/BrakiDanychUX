@@ -1,0 +1,88 @@
+url: https://bbochenczak19d.github.io/BrakiDanychUX/
+
+lang: pl
+
+template:
+  bootstrap: 5
+  bslib:
+    primary: "#2E5E9E"
+    base_font: {google: "Source Sans 3"}
+    code_font: {google: "JetBrains Mono"}
+
+home:
+  title: Granice efektu przy brakach nielosowych
+  description: >
+    Pakiet języka R do wyznaczania granic efektu przyczynowego, gdy czynnik
+    zakłócający jest częściowo nieobserwowany, a braki są nielosowe, wraz
+    z analizą wrażliwości.
+
+navbar:
+  structure:
+    left:  [algorytm, poradnik, reference, news]
+    right: [aplikacja, oserwisie, github]
+  components:
+    reference:
+      text: Dokumentacja funkcji
+      href: reference/index.html
+    news:
+      text: Zmiany
+      href: news/index.html
+    algorytm:
+      text: Algorytm
+      href: articles/algorytm.html
+    poradnik:
+      text: Poradnik
+      href: articles/poradnik.html
+    aplikacja:
+      text: Aplikacja
+      href: app/index.html
+    oserwisie:
+      text: O serwisie
+      href: articles/o-serwisie.html
+
+articles:
+  - title: Metoda
+    navbar: ~
+    contents:
+      - articles/algorytm
+  - title: Użycie
+    contents:
+      - poradnik
+  - title: Informacje
+    contents:
+      - articles/o-serwisie
+
+reference:
+  - title: Dane wejściowe
+    desc: Tablice prawdopodobieństw z danych jednostkowych albo z dokładnej tablicy.
+    contents:
+      - przygotuj_mnar
+      - print.tablice_mnar
+  - title: Granice
+    desc: Granice podstawowe ryzyk po interwencji i kontrastów.
+    contents:
+      - granice_mnar
+      - metody_granice_mnar
+  - title: Analiza wrażliwości
+    desc: Ograniczenia rozkładu czynnika zakłócającego w brakach.
+    contents:
+      - wrazliwosc_mnar
+      - siatka_wrazliwosci
+      - metody_siatka_mnar
+  - title: Dane
+    desc: Procedura generowania danych o znanym efekcie i zbiór przykładowy.
+    contents:
+      - generuj_mnar
+      - przyklad_mnar
+  - title: Pakiet
+    contents:
+      - BrakiDanychUX-package
+
+footer:
+  structure:
+    left: nota
+    right: built_with
+  components:
+    nota: >
+      Serwis stanowi integralną część pracy licencjackiej na kierunku
+      elektroniczne przetwarzanie informacji, Instytut Studiów Informacyjnych UJ.

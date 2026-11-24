@@ -1,0 +1,98 @@
+---
+title: "Granice efektu i analiza wrażliwości przy brakach nielosowych"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Granice efektu i analiza wrażliwości przy brakach nielosowych}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 6.5,
+                      fig.height = 3.5)
+```
+
+Poradnik prowadzi przez pełną ścieżkę analizy na danych syntetycznych: od
+danych z brakami w czynniku zakłócającym, przez granice podstawowe, po
+analizę wrażliwości i porównanie wyniku z prawdą znaną z konstrukcji.
+
+```{r}
+library(BrakiDanychUX)
+```
+
+## Dane o znanym efekcie
+
+Funkcja `generuj_mnar()` tworzy próbę jednostek oraz dokładną tablicę
+prawdopodobieństw. Wartość czynnika zakłócającego jest częściej
+nieobserwowana u jednostek o wyższym poziomie czynnika.
+
+```{r}
+g <- generuj_mnar(n = 5000)
+head(g$dane)
+g$prawda
+g$rozklad_w_brakach
+```
+
+Rozkład czynnika wśród jednostek z brakiem różni się od rozkładu wśród
+jednostek z obserwowaną wartością:
+
+```{r}
+tab <- przygotuj_mnar(g$dane)
+obserwowany <- apply(tab$obserwowane, c(2, 3), sum)
+round(obserwowany / rowSums(obserwowany), 3)
+```
+
+## Granice podstawowe
+
+Granice podstawowe wymagają wyłącznie założeń przyczynowych metody i nie
+wymagają żadnej wiedzy o rozkładzie czynnika w brakach.
+
+```{r}
+podstawowe <- granice_mnar(tab)
+podstawowe
+summary(podstawowe)
+```
+
+Na dokładnej tablicy granice nie zawierają błędu próbkowania i obejmują
+prawdziwe ryzyka:
+
+```{r}
+dokladne <- granice_mnar(przygotuj_mnar(g$tablica, wagi = g$tablica$p))
+dokladne$ryzyka[, c("zabieg", "dolna", "gorna")]
+```
+
+## Analiza wrażliwości
+
+Założenie o rozkładzie czynnika w brakach ma postać ograniczeń
+$\alpha_e \le P(U = u \mid E = e, R = 1) \le \beta_e$. Pakiet sprawdza
+wykonalność parametrów przed obliczeniem.
+
+```{r}
+wynik <- wrazliwosc_mnar(tab, alfa = c(0.25, 0.15), beta = c(0.45, 0.5))
+summary(wynik)
+plot(wynik)
+```
+
+## Siatka wariantów
+
+Siatka pokazuje, które kombinacje parametrów zawężają granice. Każdy wiersz
+podaje komplet czterech wartości.
+
+```{r}
+siatka <- expand.grid(alfa0 = c(0, 0.15, 0.3), alfa1 = c(0, 0.15, 0.3),
+                      beta0 = c(0.4, 1), beta1 = c(0.4, 1))
+wyniki <- siatka_wrazliwosci(tab, siatka)
+wyniki
+plot(wyniki)
+```
+
+## Naruszenie założenia
+
+Gdy brak zależy także od wyniku, granice mogą nie obejmować prawdy, nawet
+na dokładnej tablicy.
+
+```{r}
+g_nar <- generuj_mnar(naruszenie = 1.5)
+granice_mnar(przygotuj_mnar(g_nar$tablica, wagi = g_nar$tablica$p))
+g_nar$prawda
+```

@@ -1,0 +1,10 @@
+citHeader("Aby zacytowac pakiet BrakiDanychUX, uzyj ponizszego opisu.")
+
+bibentry(
+  bibtype  = "Manual",
+  title    = "BrakiDanychUX: Granice Efektu Przyczynowego przy Brakach Nielosowych",
+  author   = person("Barbara", "Bocheńczak"),
+  year     = "2027",
+  note     = paste("Pakiet R w wersji", meta$Version),
+  url      = "https://github.com/BBochenczak19D/BrakiDanychUX"
+)

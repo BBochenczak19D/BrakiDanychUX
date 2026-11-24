@@ -1,0 +1,78 @@
+---
+title: "Algorytm"
+subtitle: "Granice efektu przyczynowego przy brakach nielosowych w czynniku zakłócającym"
+bibliography: literatura.bib
+link-citations: true
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 6.5,
+                      fig.height = 4)
+library(BrakiDanychUX)
+```
+
+Strona opisuje metodę zaimplementowaną w pakiecie: założenia, wzory,
+analizę wrażliwości i granice stosowalności. Wzory i numeracja równań
+pochodzą z wersji v2 preprintu źródłowego [@pena2024mnar].
+
+## Problem
+
+Zabieg $E$ i wynik $D$ są binarne i w pełni obserwowane. Dyskretny czynnik
+zakłócający $U$ o $K$ poziomach ma braki: $R = 1$ oznacza brak wartości
+$U$. Braki są nielosowe w rozumieniu klasyfikacji mechanizmów braków
+[@little2019missing], ponieważ prawdopodobieństwo braku zależy od
+nieobserwowanej wartości $U$.
+
+Celem jest ryzyko po interwencji $P(D_e = 1)$ w sensie modelu
+przyczynowego [@pearl2009causality] oraz kontrasty RD i RR.
+
+## Założenia
+
+Czynnik $U$ kontroluje zakłócenie zależności między $E$ a $D$, a brak nie
+zależy od wyniku przy danych $E$ i $U$: $R \perp D \mid E, U$. Przy tych
+założeniach ryzyko w komórce $(E = e, U = u)$ jest takie samo wśród
+jednostek z brakiem i bez braku, więc
+$r_{eu} = P(D = 1 \mid E = e, U = u, R = 0)$ opisuje obie grupy.
+
+## Granice podstawowe
+
+$$
+L_e = a_e + c_e b_e + m_e h_e, \qquad U_e = a_e + c_e b_e + M_e h_e
+$$
+
+Oznaczenia: $a_e = P(D = 1, E = e)$, $b_e = P(R = 0, E = 1 - e)$,
+$h_e = P(R = 1, E = 1 - e)$,
+$c_e = \sum_u r_{eu} P(U = u \mid E = 1 - e, R = 0)$, $m_e$ i $M_e$
+to najmniejsze i największe ryzyko $r_{eu}$. Wzór jest równaniem (3)
+artykułu. Pierwszy składnik pochodzi od jednostek, które otrzymały zabieg
+$e$; drugi od jednostek z przeciwnego ramienia z obserwowanym $U$; trzeci
+od jednostek z przeciwnego ramienia z brakiem, których rozkład $U$ jest
+nieznany.
+
+## Analiza wrażliwości
+
+$$
+L^s_e = a_e + c_e b_e + \alpha_{1-e} h_e \sum_u r_{eu}, \qquad
+U^s_e = a_e + c_e b_e + \beta_{1-e} h_e \sum_u r_{eu}
+$$
+
+Wzór jest równaniem (6) artykułu. Parametry ograniczają każde
+prawdopodobieństwo $P(U = u \mid E = 1 - e, R = 1)$ z dołu przez
+$\alpha_{1-e}$ i z góry przez $\beta_{1-e}$. Artykuł zaleca łączenie obu
+par granic przez wybór węższych; pakiet wyznacza przecięcie na poziomie
+ryzyk i dodatkowo z przedziałem $[0, 1]$.
+
+Parametry muszą dopuszczać rozkład o sumie 1
+($\alpha_e \le 1/K \le \beta_e$) i być zgodne z ryzykiem obserwowanym
+w brakach, $\alpha_e \le \min(1, p_e / \sum_u r_{eu}) \le \beta_e$.
+
+## Granice stosowalności
+
+Granice dotyczą populacji opisanej tablicą prawdopodobieństw. Granice
+liczone z częstości próby nie mają określonego poziomu ufności. Granice
+nie są w ogólności ostre; artykuł wskazuje to w aneksie. Wąskie granice nie
+potwierdzają założeń przyczynowych, a parametrów rozkładu $U$ w brakach nie
+da się wyznaczyć z danych przy $K \ge 3$. Przy $K = 2$ rozkład w brakach
+jest wyznaczony przez dane, gdy ryzyka obu poziomów się różnią, i analiza wrażliwości traci sens.
+
+## Bibliografia

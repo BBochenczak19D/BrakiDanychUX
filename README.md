@@ -1,0 +1,342 @@
+
+<!-- README.md powstaje z README.Rmd. Zmiany wprowadza się w README.Rmd,
+a następnie renderuje plik poleceniem devtools::build_readme(). -->
+
+# BrakiDanychUX
+
+[![R-CMD-check](https://github.com/BBochenczak19D/BrakiDanychUX/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/BBochenczak19D/BrakiDanychUX/actions/workflows/R-CMD-check.yaml)
+
+Pakiet języka R do wyznaczania granic efektu przyczynowego binarnego
+zabiegu na binarny wynik, gdy czynnik zakłócający jest częściowo
+nieobserwowany, a brak jego wartości zależy od niej samej (braki
+nielosowe, MNAR). Pakiet implementuje granice podstawowe oraz analizę
+wrażliwości sterowaną jawnymi ograniczeniami rozkładu czynnika
+zakłócającego wśród jednostek z brakiem (Peña, 2024).
+
+Projekt dyplomowy na kierunku elektroniczne przetwarzanie informacji,
+Instytut Studiów Informacyjnych Uniwersytetu Jagiellońskiego. Promotor:
+dr Marek Deja.
+
+## Problem badawczy
+
+W badaniach ankietowych, w tym w kwestionariuszach doświadczeń
+użytkowników (UX), część respondentów pomija pytania. Brak odpowiedzi
+bywa związany z treścią pytania: osoby o określonej wartości cechy
+częściej odmawiają jej podania. Standardowe procedury przyjmują, że
+braki są losowe warunkowo względem zmiennych obserwowanych (Little i
+Rubin, 2019). Założenia tego nie da się sprawdzić na danych, ponieważ
+brakujących wartości nie widać.
+
+Pakiet dotyczy sytuacji, w której brakuje wartości czynnika
+zakłócającego $U$, czyli cechy wpływającej jednocześnie na zabieg $E$
+(na przykład korzystanie z nowej funkcji produktu) i na wynik $D$ (na
+przykład zadowolenie). Bez założenia o losowości braków efekt zabiegu
+nie ma jednej wartości wyznaczalnej z danych. Dane wyznaczają natomiast
+przedział możliwych wartości. Analiza wrażliwości pokazuje, jak bardzo
+przedział się zwęża, gdy badacz przyjmie jawne ograniczenia rozkładu $U$
+wśród jednostek z brakiem, i przy jakich ograniczeniach wniosek o
+kierunku efektu się utrzymuje.
+
+## Metoda
+
+**Oznaczenia i założenia.** Zabieg $E$ i wynik $D$ są binarne i w pełni
+obserwowane. Czynnik zakłócający $U$ ma $K$ poziomów; $R = 1$ oznacza
+brak wartości $U$, a $R = 0$ jej obserwację. Metoda przyjmuje, że $U$
+kontroluje zakłócenie zależności między $E$ a $D$ oraz że brak nie
+zależy od wyniku przy danych $E$ i $U$:
+
+$$
+R \perp D \mid E, U.
+$$
+
+Brak może zależeć od samego $U$, więc braki są nielosowe. Celem jest
+ryzyko po interwencji $P(D_e = 1)$, czyli odsetek wyników $D = 1$ przy
+ustawieniu zabiegu na wartość $e$ u wszystkich jednostek.
+
+**Składniki wzoru.** Dla ramienia $e \in \{0, 1\}$:
+
+$$
+r_{eu} = P(D = 1 \mid E = e, U = u, R = 0), \qquad
+m_e = \min_u r_{eu}, \qquad M_e = \max_u r_{eu},
+$$
+
+$$
+c_e = \sum_u r_{eu}\, P(U = u \mid E = 1 - e, R = 0),
+$$
+
+$$
+a_e = P(D = 1, E = e), \qquad b_e = P(R = 0, E = 1 - e), \qquad
+h_e = P(R = 1, E = 1 - e).
+$$
+
+Wielkość $r_{eu}$ jest ryzykiem obserwowanym w komórce zabiegu i
+czynnika. Wielkość $c_e$ przenosi te ryzyka na rozkład $U$ obserwowany w
+przeciwnym ramieniu, a $a_e$, $b_e$ i $h_e$ są masami prawdopodobieństwa
+z tablicy obserwacji.
+
+**Granice podstawowe.** Równanie (3) artykułu źródłowego daje
+
+$$
+L_e = a_e + c_e b_e + m_e h_e, \qquad
+U_e = a_e + c_e b_e + M_e h_e .
+$$
+
+Jednostki z ramienia $1 - e$ z obserwowanym $U$ wnoszą do ryzyka
+$P(D_e = 1)$ wartość wyznaczoną przez $c_e$. Jednostki z ramienia
+$1 - e$ z brakiem wnoszą wartość z przedziału od najmniejszego do
+największego ryzyka $r_{eu}$, ponieważ ich rozkład $U$ jest nieznany.
+Szerokość granic wynosi $(M_e - m_e) h_e$ i rośnie z odsetkiem braków w
+przeciwnym ramieniu oraz ze zróżnicowaniem ryzyk między poziomami $U$.
+
+**Kontrasty.** Różnica ryzyk (RD, wartość neutralna 0) i iloraz ryzyk
+(RR, wartość neutralna 1) mają granice
+
+$$
+RD \in \left[L_1 - U_0,\ U_1 - L_0\right], \qquad
+RR \in \left[\frac{L_1}{U_0},\ \frac{U_1}{L_0}\right].
+$$
+
+Iloraz ma osobne reguły dla zer. Równość $L_0 = 0$ zachodzi dokładnie
+wtedy, gdy $U_0 = 0$. Przy $U_0 = 0$ i $L_1 > 0$ dolna granica RR wynosi
+$+\infty$; przy $L_0 = 0$ i $U_1 > 0$ górna granica wynosi $+\infty$.
+Przy zerowych ryzykach w obu ramionach iloraz jest niezdefiniowany i
+wynik ma status `iloraz_niezdefiniowany`.
+
+**Analiza wrażliwości.** Badacz podaje ograniczenia
+$\alpha_e \le P(U = u \mid E = e, R = 1) \le \beta_e$ dla każdego
+poziomu $u$ i obu ramion. Równanie (6) artykułu daje
+
+$$
+L^s_e = a_e + c_e b_e + \alpha_{1-e}\, h_e \sum_u r_{eu}, \qquad
+U^s_e = a_e + c_e b_e + \beta_{1-e}\, h_e \sum_u r_{eu}.
+$$
+
+Ramię $e$ korzysta z parametrów ramienia $1 - e$, ponieważ $h_e$ jest
+masą braków w przeciwnym ramieniu. Suma $\sum_u r_{eu}$ jest zwykłą sumą
+ryzyk po poziomach $U$. Wynik końcowy jest przecięciem przedziałów
+$[L_e, U_e]$, $[L^s_e, U^s_e]$ i $[0, 1]$; pakiet zwraca wszystkie końce
+przed przecięciem.
+
+**Wykonalność parametrów.** Pakiet sprawdza dwa warunki konieczne i
+zatrzymuje obliczenie przy naruszeniu któregokolwiek. Pierwszy zapewnia
+istnienie rozkładu o sumie 1 w zadanych granicach:
+
+$$
+0 \le \alpha_e \le \frac{1}{K} \le \beta_e \le 1 .
+$$
+
+Drugi, z artykułu, wiąże parametry z ryzykiem obserwowanym w brakach
+$p_e = P(D = 1 \mid E = e, R = 1)$:
+
+$$
+\alpha_e \le \min\left(1,\ \frac{p_e}{\sum_u r_{eu}}\right) \le \beta_e .
+$$
+
+Spełnienie jednego z warunków nie zapewnia spełnienia pozostałego.
+Pakiet podaje dodatkowo dokładny zakres wartości $\sum_u r_{eu} q_u$ dla
+rozkładów $q$ spełniających ograniczenia i raportuje, czy $p_e$ mieści
+się w tym zakresie.
+
+**Dlaczego trzy poziomy czynnika.** Przy $K = 2$ rozkład $U$ wśród
+jednostek z brakiem jest wyznaczony przez dane. Z założenia
+$R \perp D \mid E, U$ wynika
+$p_e = r_{e0} q_{e0} + r_{e1} (1 - q_{e0})$, gdzie
+$q_{e0} = P(U = 0 \mid E = e, R = 1)$, więc
+
+$$
+q_{e0} = \frac{r_{e1} - p_e}{r_{e1} - r_{e0}}, \qquad r_{e1} \ne r_{e0}.
+$$
+
+Brak identyfikowalności, który uzasadnia granice, pojawia się dopiero
+przy $K \ge 3$: jedno równanie nie wyznacza wtedy rozkładu o $K - 1$
+swobodnych składowych. Procedura generowania danych w pakiecie używa
+dlatego czynnika o trzech poziomach.
+
+## Procedura generowania danych
+
+Funkcja `generuj_mnar()` tworzy populację o znanym efekcie. Czynnik
+zakłócający ma trzy poziomy, $U \in \{0, 1, 2\}$:
+
+$$
+P(U = u) = (0{,}4;\ 0{,}35;\ 0{,}25),
+$$
+
+$$
+P(E = 1 \mid U) = \operatorname{logit}^{-1}(-0{,}5 + 0{,}5\,U), \qquad
+P(D = 1 \mid E, U) = \operatorname{logit}^{-1}(-1 + 0{,}7\,E + 0{,}6\,U),
+$$
+
+$$
+P(R = 1 \mid E, U, D) = \operatorname{logit}^{-1}(-1{,}5 + 0{,}5\,E + 0{,}9\,U + \gamma D).
+$$
+
+Przy $\gamma = 0$ brak zależy od zabiegu i od wartości $U$, ale nie od
+wyniku, czyli spełnia założenie metody, a jednocześnie jest nielosowy:
+jednostki o wyższym $U$ częściej nie podają wartości czynnika. Wartość
+$\gamma \neq 0$ (argument `naruszenie`) tworzy wariant naruszający
+założenie $R \perp D \mid E, U$.
+
+Prawdziwe ryzyko po interwencji wynika z parametrów modelu, bez
+losowania:
+
+$$
+P(D_e = 1) = \sum_{u} P(D = 1 \mid E = e, U = u)\, P(U = u),
+$$
+
+co daje $P(D_0 = 1) = 0{,}3855$, $P(D_1 = 1) = 0{,}5490$ i
+$RD = 0{,}1635$. Funkcja zwraca też dokładną tablicę prawdopodobieństw
+obserwowanych, na której granice nie zawierają błędu próbkowania, oraz
+próbę jednostek (domyślnie $n = 5000$, ziarno 202706).
+
+Na dokładnej tablicy granice podstawowe wynoszą $[0{,}3443;\ 0{,}4092]$
+dla $E = 0$ oraz $[0{,}5243;\ 0{,}5704]$ dla $E = 1$, a granice RD
+$[0{,}1151;\ 0{,}2261]$. Wszystkie zawierają prawdziwe wartości.
+Prawdziwy rozkład $U$ wśród jednostek z brakiem daje parametry
+$\alpha_0 = 0{,}281$, $\beta_0 = 0{,}384$, $\alpha_1 = 0{,}176$ i
+$\beta_1 = 0{,}465$.
+
+Analiza wrażliwości zawęża granice ramienia $e$ dopiero wtedy, gdy
+$\alpha_{1-e} > m_e / \sum_u r_{eu}$ albo
+$\beta_{1-e} < M_e / \sum_u r_{eu}$. W modelu progi wynoszą 0,220 i
+0,451 dla ramienia 0 oraz 0,249 i 0,416 dla ramienia 1. Siatka z
+$\alpha \in \{0;\ 0{,}1;\ 0{,}2\}$ i $\beta \in \{0{,}8;\ 0{,}9;\ 1\}$
+dla każdego ramienia (81 kombinacji) nie zawęża granic w żadnej
+kombinacji (0 zawężających). Siatka z
+$\alpha \in \{0;\ 0{,}15;\ 0{,}3\}$ i $\beta \in \{0{,}4;\ 0{,}6;\ 1\}$
+przechodzi przez progi i zawęża granice w 65 z 81 kombinacji.
+
+W wariancie z naruszeniem założenia ($\gamma = 1{,}5$) granice
+podstawowe wynoszą $[0{,}2829;\ 0{,}3157]$ i $[0{,}4278;\ 0{,}4596]$ i
+nie zawierają prawdziwych ryzyk, które nie zmieniają się wraz z
+$\gamma$.
+
+## Instalacja
+
+``` r
+# install.packages("remotes")
+remotes::install_github("BBochenczak19D/BrakiDanychUX")
+```
+
+## Przykład
+
+Zbiór `przyklad_mnar` zawiera 2000 jednostek z procedury generowania
+danych.
+
+``` r
+library(BrakiDanychUX)
+
+tab <- przygotuj_mnar(przyklad_mnar)
+granice_mnar(tab)
+#> Granice efektu przy brakach nielosowych (granice_podstawowe)
+#> 
+#>    wielkosc   dolna  gorna
+#>  P(D_0 = 1) 0.36430 0.4384
+#>  P(D_1 = 1) 0.48150 0.5304
+#>          RD 0.04311 0.1661
+```
+
+Granice z próby są oszacowaniem granic populacyjnych bez określonego
+poziomu ufności. W przykładzie granice dla $E = 1$ nie obejmują
+prawdziwej wartości 0,5490 z powodu błędu próbkowania.
+
+Analiza wrażliwości z ograniczeniami rozkładu $U$ w brakach:
+
+``` r
+wynik <- wrazliwosc_mnar(tab, alfa = c(0.25, 0.15), beta = c(0.45, 0.5))
+wynik$wrazliwosc[, c("zabieg", "dolna_podstawowa", "gorna_podstawowa",
+                     "dolna_przeciecie", "gorna_przeciecie")]
+#>   zabieg dolna_podstawowa gorna_podstawowa dolna_przeciecie gorna_przeciecie
+#> 1      0        0.3642678        0.4384192        0.3642678        0.4384192
+#> 2      1        0.4815307        0.5303681        0.4829154        0.5303681
+wynik$kontrasty
+#>   kontrast      dolna     gorna       status
+#> 1       RD 0.04449619 0.1661003 zdefiniowany
+```
+
+``` r
+plot(wynik)
+```
+
+<img src="man/figures/README-wykres-1.png" alt="Granice ryzyka po interwencji dla obu wartości zabiegu: podstawowe i po analizie wrażliwości"  />
+
+Siatka wariantów z jawnymi wartościami czterech parametrów:
+
+``` r
+siatka <- expand.grid(alfa0 = c(0, 0.3), alfa1 = c(0, 0.3),
+                      beta0 = c(0.4, 1), beta1 = c(0.4, 1))
+siatka_wrazliwosci(tab, siatka)
+#> Siatka wrazliwosci: 16 wariantow, wykonalnych 16, zawezajacych 15
+#> 
+#> Granice kontrastu RD po przecieciu:
+#>       nazwa alfa0 alfa1 beta0 beta1 wykonalna   dolna  gorna zaweza
+#>  wariant_01   0.0   0.0   0.4   0.4      TRUE 0.06674 0.1602   TRUE
+#>  wariant_02   0.3   0.0   0.4   0.4      TRUE 0.08198 0.1602   TRUE
+#>  wariant_03   0.0   0.3   0.4   0.4      TRUE 0.06674 0.1392   TRUE
+#>  wariant_04   0.3   0.3   0.4   0.4      TRUE 0.08198 0.1392   TRUE
+#>  wariant_05   0.0   0.0   1.0   0.4      TRUE 0.06674 0.1661   TRUE
+#>  wariant_06   0.3   0.0   1.0   0.4      TRUE 0.08198 0.1661   TRUE
+#>  wariant_07   0.0   0.3   1.0   0.4      TRUE 0.06674 0.1451   TRUE
+#>  wariant_08   0.3   0.3   1.0   0.4      TRUE 0.08198 0.1451   TRUE
+#>  wariant_09   0.0   0.0   0.4   1.0      TRUE 0.04311 0.1602   TRUE
+#>  wariant_10   0.3   0.0   0.4   1.0      TRUE 0.05834 0.1602   TRUE
+#>  wariant_11   0.0   0.3   0.4   1.0      TRUE 0.04311 0.1392   TRUE
+#>  wariant_12   0.3   0.3   0.4   1.0      TRUE 0.05834 0.1392   TRUE
+#>  wariant_13   0.0   0.0   1.0   1.0      TRUE 0.04311 0.1661  FALSE
+#>  wariant_14   0.3   0.0   1.0   1.0      TRUE 0.05834 0.1661   TRUE
+#>  wariant_15   0.0   0.3   1.0   1.0      TRUE 0.04311 0.1451   TRUE
+#>  wariant_16   0.3   0.3   1.0   1.0      TRUE 0.05834 0.1451   TRUE
+```
+
+## Struktura pakietu
+
+| Plik | Zawartość |
+|----|----|
+| `R/tablice.R` | `przygotuj_mnar()`: tablice prawdopodobieństw z danych jednostkowych albo z dokładnej tablicy z wagami, wsparcie komórek |
+| `R/granice.R` | `granice_mnar()`: granice podstawowe z równania (3), kontrasty RD i RR z regułami dla zer |
+| `R/wrazliwosc.R` | `wrazliwosc_mnar()`, `siatka_wrazliwosci()`: równanie (6), kontrole wykonalności, przecięcie granic |
+| `R/generator.R` | `generuj_mnar()`: dane o znanym efekcie, dokładna tablica i wariant z naruszeniem założenia |
+| `R/metody_s3.R` | metody `print()`, `summary()` i `plot()` |
+| `R/dane.R` | dokumentacja zbioru `przyklad_mnar` |
+| `data-raw/generuj_dane.R` | skrypt tworzący zbiór przykładowy |
+| `tests/testthat/` | testy analityczne, testy własności, testy procedury generowania danych, kontrakt błędów |
+| `vignettes/` | poradnik oraz strony serwisu: algorytm i nota o serwisie |
+
+## Weryfikacja
+
+Testy pakietu mają trzy warstwy. **Przypadki analityczne** odtwarzają
+przykład kontrolny policzony ręcznie, z rachunkiem w komentarzu testu:
+przy masach $P(E = e, R = 0) = 0{,}3$, $P(E = e, R = 1) = 0{,}2$,
+równomiernym rozkładzie $U$ i ryzykach $(0{,}1;\ 0{,}3)$ oraz
+$(0{,}4;\ 0{,}6)$ granice ryzyk wynoszą $[0{,}18;\ 0{,}22]$ i
+$[0{,}48;\ 0{,}52]$, RD $[0{,}26;\ 0{,}34]$, a RR $[24/11;\ 26/9]$; przy
+$\alpha = \beta = 0{,}5$ ryzyka są wyznaczone punktowo: 0,2 i 0,5.
+**Testy własności** porównują wynik z niezależnym obliczeniem wzoru (3),
+sprawdzają zawieranie prawdziwych ryzyk dla losowych modeli
+spełniających założenia, zawieranie przecięcia w granicach podstawowych,
+brak poszerzenia granic przy węższym zbiorze dopuszczalnych rozkładów,
+niezależność od kolejności wierszy i poziomów oraz wzór identyfikacji
+przy $K = 2$. **Testy procedury generowania danych** sprawdzają
+powtarzalność, prawdę konstrukcyjną i zbieżność częstości z próby do
+dokładnej tablicy.
+
+Testy kontraktu błędów opisują reakcję na dane spoza dziedziny metody:
+zabieg i wynik spoza zbioru $\{0, 1\}$, niezgodny wskaźnik braku, brak
+obserwowanego wsparcia w komórce zabiegu i czynnika.
+
+``` r
+devtools::test()
+devtools::check()
+```
+
+## Literatura
+
+Little, R. J. A., Rubin, D. B. (2019). *Statistical analysis with
+missing data* (wyd. 3). Wiley. <https://doi.org/10.1002/9781119482260>
+
+Peña, J. M. (2024). Bounds and sensitivity analysis of the causal effect
+under outcome-independent MNAR confounding. arXiv:2410.06726, wersja 2.
+<https://arxiv.org/abs/2410.06726v2>
+
+## Licencja
+
+GPL-3.
