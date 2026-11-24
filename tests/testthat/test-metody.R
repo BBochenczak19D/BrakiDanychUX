@@ -1,0 +1,23 @@
+test_that("metody granic dzialaja dla granic podstawowych i wrazliwosci", {
+  w <- granice_mnar(przyklad_mnar)
+  expect_output(print(w), "P\\(D_1 = 1\\)")
+  s <- summary(w)
+  expect_s3_class(s, "summary.granice_mnar")
+  expect_output(print(s), "wzoru \\(3\\)")
+  v <- wrazliwosc_mnar(przyklad_mnar, c(0.2, 0.2), c(0.5, 0.5))
+  expect_output(print(summary(v)), "wykonalnosci")
+  grDevices::pdf(NULL)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  expect_identical(plot(w), w)
+  expect_identical(plot(v), v)
+})
+
+test_that("metody siatki i tablic dzialaja", {
+  siatka <- expand.grid(alfa0 = c(0, 0.2), alfa1 = 0, beta0 = 1, beta1 = 1)
+  w <- siatka_wrazliwosci(przyklad_mnar, siatka)
+  expect_output(print(w), "wariantow")
+  expect_output(print(przygotuj_mnar(przyklad_mnar)), "Wsparcie")
+  grDevices::pdf(NULL)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  expect_identical(plot(w), w)
+})
