@@ -1,0 +1,39 @@
+Package: BrakiDanychUX
+Type: Package
+Title: Granice Efektu Przyczynowego przy Brakach Nielosowych
+Version: 0.0.1
+Authors@R: c(
+    person("Barbara", "Bocheńczak",
+           email = "90689570+BBochenczak19D@users.noreply.github.com",
+           role = c("aut", "cre")),
+    person("Marek", "Deja", role = "ths",
+           comment = c(ORCID = "0000-0003-0015-2322"))
+  )
+Description: Wyznacza nieparametryczne granice ryzyka po interwencji, roznicy
+    ryzyk i ilorazu ryzyk dla binarnego zabiegu i wyniku, gdy dyskretny
+    czynnik zaklocajacy jest czesciowo nieobserwowany, a braki zaleza od jego
+    wartosci (braki nielosowe, MNAR). Implementuje granice podstawowe oraz
+    analize wrazliwosci sterowana ograniczeniami rozkladu czynnika
+    zaklocajacego w brakach (Pena 2024) <doi:10.48550/arXiv.2410.06726>.
+    Zawiera kontrole wykonalnosci parametrow wrazliwosci, siatke wariantow
+    oraz procedure generowania danych o znanym efekcie przyczynowym.
+License: GPL-3
+Encoding: UTF-8
+Language: pl
+LazyData: true
+Depends:
+    R (>= 4.1)
+Imports:
+    graphics,
+    stats,
+    withr
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+RoxygenNote: 7.3.3
+URL: https://github.com/BBochenczak19D/BrakiDanychUX,
+    https://bbochenczak19d.github.io/BrakiDanychUX/
+BugReports: https://github.com/BBochenczak19D/BrakiDanychUX/issues
